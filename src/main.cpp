@@ -16,17 +16,19 @@ void loop_speedy();
 void setup_mcpwm();
 void loop_mcpwm();
 
-void setModeOutput(int m0, int m1, int m2 = 0)
+void setModeOutput(int ms1, int ms2, int ms3 = 0)
 {
-  digitalWrite(M0, m0);
-  digitalWrite(M1, m1);
-  digitalWrite(M2, m2);
+  digitalWrite(MS1, ms1);
+  digitalWrite(MS2, ms2);
+  digitalWrite(MS3, ms3);
 }
 
 void setMode(int mode)
 {
+
   if (driver == TMC_2208)
   {
+    Serial.printf("TMC2208: 1/%d\n", mode);
     switch (mode)
     {
     case 2:
@@ -45,6 +47,7 @@ void setMode(int mode)
   }
   else if (driver == DRV_8825)
   {
+    Serial.printf("DRV8825: 1/%d\n", mode);
     switch (mode)
     {
     case 1:
@@ -67,20 +70,41 @@ void setMode(int mode)
       break;
     }
   }
+  else
+  {
+    Serial.printf("No driver selected: 1/%d\n", mode);
+  }
 }
 
 void setup()
 {
-  setup_stepperlight();
-  // setup_basicstepper();
-  //setup_speedy();
-  //setup_mcpwm();
+  // some general setup
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(MS1, OUTPUT);
+  pinMode(MS2, OUTPUT);
+  pinMode(MS3, OUTPUT);
+
+  pinMode(MOTOR_STEP_PIN, OUTPUT);
+  digitalWrite(MOTOR_STEP_PIN, LOW);
+
+  pinMode(MOTOR_DIRECTION_PIN, OUTPUT);
+  digitalWrite(MOTOR_DIRECTION_PIN, LOW);
+
+  Serial.begin(115200);
+  Serial.print("starting\n");
+
+  // lib specific startup
+
+  // setup_stepperlight();
+  setup_basicstepper();
+  // setup_speedy();
+  setup_mcpwm();
 }
 
 void loop()
 {
-  loop_stepperlight();
-  //loop_basicstepper();
+  // loop_stepperlight();
+  loop_basicstepper();
   //loop_speedy();
   // loop_mcpwm();
 }

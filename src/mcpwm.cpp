@@ -9,26 +9,20 @@ esp_err_t ret;
 
 void setup_mcpwm()
 {
-  // setup the LED pin and enable print statements
-  pinMode(LED_PIN, OUTPUT);
-  pinMode(M0, OUTPUT);
-  pinMode(M1, OUTPUT);
-  pinMode(M2, OUTPUT);
-  Serial.begin(115200);
-  Serial.print("starting\n");
+  int mode = 8;
+  setMode(mode);
 
-  setMode(16);
-}
-
-void loop_mcpwm()
-{
   // Connect the A output to a pin.
   ret = mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, MOTOR_STEP_PIN);
   ESP_ERROR_CHECK(ret);
 
   mcpwm_config_t pwmConfig = {};
+
+  // time per round in sec
+  int timePerRound = 1;
+
   // Default frequency in Hertz.
-  pwmConfig.frequency = 100;
+  pwmConfig.frequency = 400 * mode * timePerRound;
   // Duty cycle of both outputs.
   pwmConfig.cmpr_a = 10.0f;
   pwmConfig.cmpr_b = 90.0f;
@@ -39,4 +33,8 @@ void loop_mcpwm()
 
   ret = mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwmConfig);
   ESP_ERROR_CHECK(ret);
+}
+
+void loop_mcpwm()
+{
 }

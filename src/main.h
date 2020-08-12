@@ -11,9 +11,9 @@ const int LED_PIN = 2;
 const int MOTOR_STEP_PIN = 15;
 const int MOTOR_DIRECTION_PIN = 13;
 
-const int M0 = 21;
-const int M1 = 22;
-const int M2 = 23;
+const int MS1 = 21;
+const int MS2 = 22;
+const int MS3 = 23;
 
 void setMode(int mode);
 
