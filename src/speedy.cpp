@@ -4,12 +4,140 @@
 
 // create the stepper motor object
 SpeedyStepper speedystepper;
+SpeedyStepper speedystepper2;
+SpeedyStepper speedystepper3;
+SpeedyStepper speedystepper4;
+
+int mode = 8; // 1/8 microstepping
+int stepsPerRound = 200;
+int fastSpeed = 2 * stepsPerRound;   // 2 rounds / sec
+int slowSpeed = 0.5 * stepsPerRound; // 1/2 round / sec
+int midSpeed = 0;                    // (fastSpeed + slowSpeed) / 2;
+int accel = 2 * stepsPerRound;
+
+bool inMotion = false;
+int phase = 0;
 
 void setup_speedy()
 {
   // connect and configure the stepper motor to its IO pins
   speedystepper.connectToPins(MOTOR_STEP_PIN, MOTOR_DIRECTION_PIN);
+
+  setMode(mode);
+
+  speedystepper.setSpeedInStepsPerSecond(fastSpeed * mode);
+  speedystepper.setAccelerationInStepsPerSecondPerSecond(accel * mode);
 }
+
+void loop_speedy()
+{
+  if (inMotion)
+  {
+    if ((!speedystepper.motionComplete()))
+    {
+      speedystepper.processMovement();
+    }
+    else
+    {
+      Serial.println("Motion finished.");
+      inMotion = false;
+    }
+  }
+  else
+  {
+
+    if (phase == 0)
+    {
+      Serial.println("Starting motion 0...");
+      speedystepper.setSpeedInStepsPerSecond(fastSpeed * mode);
+      speedystepper.setupRelativeMoveInSteps(2 * stepsPerRound * mode, midSpeed, midSpeed);
+      phase = 1;
+      digitalWrite(LED_PIN, HIGH);
+    }
+    else
+    {
+      Serial.println("Starting motion 1...");
+      speedystepper.setSpeedInStepsPerSecond(fastSpeed * mode);
+      speedystepper.setupRelativeMoveInSteps(2 * stepsPerRound * mode, midSpeed, midSpeed);
+      phase = 0;
+      digitalWrite(LED_PIN, LOW);
+    }
+    inMotion = true;
+  }
+}
+
+// 4 motors
+
+void setup_speedy4()
+{
+  // connect and configure the stepper motor to its IO pins
+  speedystepper.connectToPins(MOTOR_STEP_PIN, MOTOR_DIRECTION_PIN);
+  speedystepper2.connectToPins(MOTOR_STEP_PIN2, MOTOR_DIRECTION_PIN2);
+  speedystepper3.connectToPins(MOTOR_STEP_PIN3, MOTOR_DIRECTION_PIN3);
+  speedystepper4.connectToPins(MOTOR_STEP_PIN4, MOTOR_DIRECTION_PIN4);
+
+  setMode(mode);
+
+  speedystepper.setSpeedInStepsPerSecond(fastSpeed * mode);
+  speedystepper.setAccelerationInStepsPerSecondPerSecond(1 * fastSpeed * mode);
+
+  speedystepper2.setSpeedInStepsPerSecond(fastSpeed * mode);
+  speedystepper2.setAccelerationInStepsPerSecondPerSecond(1 * fastSpeed * mode);
+
+  speedystepper3.setSpeedInStepsPerSecond(fastSpeed * mode);
+  speedystepper3.setAccelerationInStepsPerSecondPerSecond(1 * fastSpeed * mode);
+
+  speedystepper4.setSpeedInStepsPerSecond(fastSpeed * mode);
+  speedystepper4.setAccelerationInStepsPerSecondPerSecond(1 * fastSpeed * mode);
+}
+
+void loop_speedy4()
+{
+  if (inMotion)
+  {
+    if ((!speedystepper.motionComplete()) || (!speedystepper2.motionComplete()) ||
+        (!speedystepper3.motionComplete()) || (!speedystepper4.motionComplete()))
+    {
+      speedystepper.processMovement();
+      speedystepper2.processMovement();
+      speedystepper3.processMovement();
+      speedystepper4.processMovement();
+    }
+    else
+    {
+      Serial.println("Motion finished.");
+      inMotion = false;
+      delay(1000);
+    }
+  }
+  else
+  {
+
+    if (phase == 0)
+    {
+      Serial.println("Starting motion 0...");
+      speedystepper.setupMoveInSteps(mode * fastSpeed * 2);
+      speedystepper2.setupMoveInSteps(mode * fastSpeed * 2);
+      speedystepper3.setupMoveInSteps(mode * fastSpeed * 2);
+      speedystepper4.setupMoveInSteps(mode * fastSpeed * 2);
+      phase = 1;
+      digitalWrite(LED_PIN, HIGH);
+    }
+    else
+    {
+      Serial.println("Starting motion 1...");
+      speedystepper.setupMoveInSteps(-mode * fastSpeed * 2);
+      speedystepper2.setupMoveInSteps(-mode * fastSpeed * 2);
+      speedystepper3.setupMoveInSteps(-mode * fastSpeed * 2);
+      speedystepper4.setupMoveInSteps(-mode * fastSpeed * 2);
+      phase = 0;
+      digitalWrite(LED_PIN, LOW);
+    }
+    inMotion = true;
+  }
+}
+
+// EXPERIMENTAL...
 
 void varyMicrosteps(int baseSpeed)
 {
@@ -33,11 +161,11 @@ void varyMicrosteps(int baseSpeed)
   Serial.println("");
 }
 
-void justRun(int speed, int mode)
+void justRun(int fastSpeed, int mode)
 {
   setMode(mode);
-  int steps = speed * mode;
-  Serial.printf("speed: %d, mode: %d, steps/s: %d\n", speed, mode, steps);
+  int steps = fastSpeed * mode;
+  Serial.printf("speed: %d, mode: %d, steps/s: %d\n", fastSpeed, mode, steps);
 
   speedystepper.setSpeedInStepsPerSecond(steps);
   speedystepper.setAccelerationInStepsPerSecondPerSecond(steps * 100);
@@ -48,13 +176,13 @@ void justRun(int speed, int mode)
 void speedUp(int speedFrom, int speedTo, int mode)
 {
   int step = (speedTo - speedFrom) / 3;
-  for (int speed = speedFrom; speed <= speedTo; speed += step)
+  for (int fastSpeed = speedFrom; fastSpeed <= speedTo; fastSpeed += step)
   {
-    justRun(speed, mode);
+    justRun(fastSpeed, mode);
   }
 }
 
-void loop_speedy()
+void loop_speedy0()
 {
   Serial.print("looping\n");
   //
@@ -77,15 +205,15 @@ void loop_speedy()
   //
   // set the speed and acceleration rates for the stepper motor
   //
-  int speed = 2 * 200; // 2 rounds
-  speedystepper.setSpeedInStepsPerSecond(speed * mode);
-  speedystepper.setAccelerationInStepsPerSecondPerSecond(1 * speed * mode);
+  int fastSpeed = 2 * 200; // 2 rounds
+  speedystepper.setSpeedInStepsPerSecond(fastSpeed * mode);
+  speedystepper.setAccelerationInStepsPerSecondPerSecond(1 * fastSpeed * mode);
 
   //
   // Rotate the motor in the forward direction one revolution (200 steps).
   // This function call will not return until the motion is complete.
   //
-  speedystepper.moveRelativeInSteps(mode * speed * 2);
+  speedystepper.moveRelativeInSteps(mode * fastSpeed * 2);
 
   //
   // now that the rotation has finished, delay 1 second before starting
@@ -96,7 +224,7 @@ void loop_speedy()
   //
   // rotate backward 1 rotation, then wait 1 second
   //
-  speedystepper.moveRelativeInSteps(-mode * speed * 2);
+  speedystepper.moveRelativeInSteps(-mode * fastSpeed * 2);
   delay(500);
 
   //

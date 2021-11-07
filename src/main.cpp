@@ -96,15 +96,15 @@ void setup()
   // lib specific startup
 
   // setup_stepperlight();
-  setup_basicstepper();
-  // setup_speedy();
-  setup_mcpwm();
+  //setup_basicstepper();
+  setup_speedy();
+  //setup_mcpwm();
 }
 
 void loop()
 {
   // loop_stepperlight();
-  loop_basicstepper();
-  //loop_speedy();
+  //loop_basicstepper();
+  loop_speedy();
   // loop_mcpwm();
 }
